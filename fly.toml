@@ -1,0 +1,41 @@
+# Configuracao do Fly.io. Ajuste "app" se o nome global estiver
+# indisponivel (fly launch ajusta ao criar). Single instance por
+# exigencia do SQLite (nunca escalar horizontalmente este servico).
+app = "temp-files"
+primary_region = "gru"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+  HOST = "0.0.0.0"
+  DB_FILE_NAME = "/data/temp-files.db"
+
+# Volume persistente para o SQLite. Crie com:
+#   fly volumes create temp_files_data --region gru --size 1
+# e referencie em [[mounts]] source = "temp_files_data", destination = "/data".
+[[mounts]]
+  source = "temp_files_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  # SQLite exige uma unica instancia; nunca escalar horizontalmente.
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "15s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

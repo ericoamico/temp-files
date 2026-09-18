@@ -9,20 +9,22 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "start:prod": "drizzle-kit migrate && node dist/server.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1135.0",
     "@aws-sdk/s3-request-presigner": "^3.1135.0",
+    "@fastify/static": "8.2.0",
     "better-sqlite3": "12",
     "dotenv": "^18.0.0",
+    "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.6.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^24.10.1",
-    "drizzle-kit": "^0.31.10",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
