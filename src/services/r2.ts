@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
@@ -197,4 +198,16 @@ export async function getStoredObject(
       `Falha ao consultar o storage: ${name ?? 'erro desconhecido'}`,
     );
   }
+}
+
+/**
+ * Remove o objeto do R2. O DeleteObject do S3/R2 é idempotente:
+ * indica sucesso mesmo quando o objeto já não existe, o que
+ * permite remover o registro do banco nesse caso.
+ */
+export async function deleteObject(objectKey: string): Promise<void> {
+  const client = getClient();
+  await client.send(
+    new DeleteObjectCommand({ Bucket: config.r2.bucket, Key: objectKey }),
+  );
 }

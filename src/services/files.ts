@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, lte } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { tempFiles, type TempFileSelect } from '../db/schema.js';
 
@@ -49,4 +49,36 @@ export function completeFile(
     .where(eq(tempFiles.id, id))
     .returning()
     .get();
+}
+
+export function findCompletedExpired(
+  limit: number,
+  before: Date,
+): TempFileSelect[] {
+  return db
+    .select()
+    .from(tempFiles)
+    .where(
+      and(eq(tempFiles.status, 'completed'), lte(tempFiles.expiresAt, before)),
+    )
+    .limit(limit)
+    .all();
+}
+
+export function findAbandonedPending(
+  limit: number,
+  before: Date,
+): TempFileSelect[] {
+  return db
+    .select()
+    .from(tempFiles)
+    .where(
+      and(eq(tempFiles.status, 'pending'), lte(tempFiles.createdAt, before)),
+    )
+    .limit(limit)
+    .all();
+}
+
+export function deleteFileById(id: number): void {
+  db.delete(tempFiles).where(eq(tempFiles.id, id)).run();
 }

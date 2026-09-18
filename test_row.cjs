@@ -29,6 +29,22 @@ if (mode === 'insert-expired') {
 } else if (mode === 'delete') {
   db.prepare('DELETE FROM temp_files WHERE object_key = ?').run(process.argv[3]);
   console.log('registro de teste removido');
+} else if (mode === 'set-expire-past') {
+  // Usado apenas em registros de teste criados especificamente para o cleanup
+  const now = Date.now();
+  db.prepare('UPDATE temp_files SET expires_at = ? WHERE object_key = ?').run(
+    now - 60000,
+    process.argv[3]
+  );
+  console.log('expires_at do registro de teste movido para o passado');
+} else if (mode === 'set-created-past') {
+  // Usado apenas em registros de teste criados especificamente para o cleanup
+  const now = Date.now();
+  db.prepare('UPDATE temp_files SET created_at = ? WHERE object_key = ?').run(
+    now - 16 * 60000,
+    process.argv[3]
+  );
+  console.log('created_at do registro de teste movido para o passado');
 }
 
 db.close();

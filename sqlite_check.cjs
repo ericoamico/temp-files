@@ -6,7 +6,9 @@ if (!objectKey) {
   process.exit(1);
 }
 
-const db = new Database('data/temp-files.db', { readonly: true });
+// Abre leitura-gravada: com journal_mode=WAL, conexões readonly usam o
+// fallback de shm e podem ler dados obsoletos entre checkpoints.
+const db = new Database('data/temp-files.db');
 const row = db
   .prepare('SELECT * FROM temp_files WHERE object_key = ?')
   .get(objectKey);

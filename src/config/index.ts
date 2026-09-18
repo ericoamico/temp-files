@@ -27,4 +27,13 @@ export const config = {
     maxFileRetentionMinutes: 10080, // 7 dias
     maxFileSizeBytes: 100 * 1024 * 1024, // 100 MB
   },
+  cleanup: {
+    // Intervalo do processo periódico de limpeza (minutos).
+    intervalMinutes: Number(process.env.CLEANUP_INTERVAL_MINUTES) || 5,
+    // Tamanho do lote de registros processados por passada.
+    batchSize: Number(process.env.CLEANUP_BATCH_SIZE) || 50,
+    // Margem de segurança (minutos) além do TTL do PUT antes de
+    // considerar um registro pending como abandonado.
+    pendingCutoffMarginMinutes: 5,
+  },
 } as const;
