@@ -33,6 +33,17 @@ export interface CompleteUploadResponse {
   expiresAt: string;
 }
 
+/** Resposta 200 de GET /files/:shareId. */
+export interface FileMetaResponse {
+  shareId: string;
+  originalFileName: string;
+  contentType: string;
+  size: number;
+  expiresAt: string;
+  downloadUrl: string;
+  downloadUrlExpiresAt: string;
+}
+
 export class ApiError extends Error {
   readonly status: number;
   constructor(status: number, message: string) {
@@ -46,13 +57,18 @@ async function requestJson<T>(
   path: string,
   body: unknown,
   expectedStatus: number,
+  method: 'GET' | 'POST' = 'POST',
 ): Promise<T> {
   let response: Response;
   try {
     response = await fetch(path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      method,
+      ...(method === 'POST'
+        ? {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          }
+        : {}),
     });
   } catch {
     // Falha de rede ou de protocolo.
@@ -90,5 +106,15 @@ export function completeUpload(
     '/api/uploads/complete',
     { objectKey },
     200,
+  );
+}
+
+/** GET /files/:shareId — 404 indisponivel, 410 expirado (contrato real). */
+export function getFileMeta(shareId: string): Promise<FileMetaResponse> {
+  return requestJson<FileMetaResponse>(
+    '/api/files/' + encodeURIComponent(shareId),
+    null,
+    200,
+    'GET',
   );
 }
