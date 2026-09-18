@@ -1,0 +1,100 @@
+### Variaveis
+### Altere @objectKey e @shareId pelos valores retornados pelas requisicoes.
+
+@baseUrl = http://localhost:3000
+@objectKey = uploads/0000/00/00/00000000-0000-4000-8000-000000000000.bin
+@shareId = AAAAAAAAAAAAAAAAAAAAAA
+
+### 1. Health check
+### Verifica que o servico esta funcionando.
+
+GET {{baseUrl}}/health
+
+### 2. Solicitar upload
+### Registra o arquivo ficticio e retorna { shareId, objectKey, uploadUrl, headers, expiresAt }.
+### Campos: fileName (1-255), size em bytes (1..100MB), contentType, expiresInMinutes = retencao
+### do ARQUIVO depois da conclusao (1..43200; limites reais ficam no servidor).
+
+POST {{baseUrl}}/uploads
+Content-Type: application/json
+
+{
+  "fileName": "relatorio-demo.pdf",
+  "size": 204800,
+  "contentType": "application/pdf",
+  "expiresInMinutes": 60
+}
+
+### 2.1 Enviar o arquivo direto ao Cloudflare R2 (nao automatizado aqui)
+### A presigned URL e dinamica: copie a "uploadUrl" retornada acima e faca um PUT
+### do arquivo diretamente para ela (com o Content-Type do campo "headers" retornado)
+### ANTES de chamar POST /uploads/complete. O conteudo nao passa pelo servidor Fastify.
+
+### 3. Confirmar upload
+### Substitua {{objectKey}} no inicio do arquivo pelo objectKey retornado pelo POST /uploads.
+### A API confirma com HeadObject no R2: objeto ausente -> 404; tamanho diferente -> 409;
+### correto -> 200 com status "completed".
+
+POST {{baseUrl}}/uploads/complete
+Content-Type: application/json
+
+{
+  "objectKey": "{{objectKey}}"
+}
+
+### 4. Obter link privado de download
+### Substitua {{shareId}} no inicio do arquivo pelo shareId retornado pelo POST /uploads.
+### Retorna { originalFileName, contentType, size, expiresAt, downloadUrl, downloadUrlExpiresAt }.
+### Baixe o arquivo diretamente da "downloadUrl" (PUT/GET nao passam pelo Fastify).
+
+GET {{baseUrl}}/files/{{shareId}}
+
+### 5. Erro: shareId inexistente (formato valido) -> 404
+
+GET {{baseUrl}}/files/ZZZZZZZZZZZZZZZZZZZZZZ
+
+### 6. Erro: shareId com formato invalido -> 400
+
+GET {{baseUrl}}/files/id invalido com espacos
+
+### 7. Erro: payload com size acima do limite (100MB) -> 400
+
+POST {{baseUrl}}/uploads
+Content-Type: application/json
+
+{
+  "fileName": "grande-demo.bin",
+  "size": 999999999999,
+  "contentType": "application/octet-stream",
+  "expiresInMinutes": 60
+}
+
+### 8. Erro: expiresInMinutes fora do intervalo (0) -> 400
+
+POST {{baseUrl}}/uploads
+Content-Type: application/json
+
+{
+  "fileName": "demo.txt",
+  "size": 1024,
+  "contentType": "text/plain",
+  "expiresInMinutes": 0
+}
+
+### 9. Erro: objectKey com formato invalido -> 400
+
+POST {{baseUrl}}/uploads/complete
+Content-Type: application/json
+
+{
+  "objectKey": "nao-e-uma-object-key"
+}
+
+### 10. Erro: objectKey valida no formato, mas sem registro -> 404
+
+POST {{baseUrl}}/uploads/complete
+Content-Type: application/json
+
+{
+  "objectKey": "uploads/1111/11/11/11111111-1111-4111-8111-111111111111.bin"
+}
