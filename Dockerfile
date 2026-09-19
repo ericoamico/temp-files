@@ -40,4 +40,4 @@ COPY --from=builder /app/frontend/dist ./frontend/dist
 # o diretorio se faltar. Migrations sao aplicadas no arranque de forma
 # idempotente, sem destruir registros existentes.
 EXPOSE 8080
-CMD ["sh", "-c", "drizzle-kit migrate && node dist/server.js"]
+CMD ["sh", "-c", "./node_modules/.bin/drizzle-kit migrate && node dist/server.js"]

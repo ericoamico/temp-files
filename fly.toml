@@ -1,41 +1,44 @@
-# Configuracao do Fly.io. Ajuste "app" se o nome global estiver
-# indisponivel (fly launch ajusta ao criar). Single instance por
-# exigencia do SQLite (nunca escalar horizontalmente este servico).
-app = "temp-files"
-primary_region = "gru"
+# fly.toml app configuration file generated for temp-files-muddy-stream-4774 on 2026-09-19T11:08:43-03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'temp-files-muddy-stream-4774'
+primary_region = 'gru'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [env]
-  NODE_ENV = "production"
-  PORT = "8080"
-  HOST = "0.0.0.0"
-  DB_FILE_NAME = "/data/temp-files.db"
+  DB_FILE_NAME = '/data/temp-files.db'
+  HOST = '0.0.0.0'
+  NODE_ENV = 'production'
+  PORT = '8080'
+  LOG_LEVEL = 'info'
+  PUT_URL_TTL_MINUTES = '10'
+  DOWNLOAD_URL_TTL_MINUTES = '5'
+  CLEANUP_INTERVAL_MINUTES = '5'
+  CLEANUP_BATCH_SIZE = '50'
 
-# Volume persistente para o SQLite. Crie com:
-#   fly volumes create temp_files_data --region gru --size 1
-# e referencie em [[mounts]] source = "temp_files_data", destination = "/data".
 [[mounts]]
-  source = "temp_files_data"
-  destination = "/data"
+  source = 'temp_files_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = "suspend"
+  auto_stop_machines = 'suspend'
   auto_start_machines = true
-  # SQLite exige uma unica instancia; nunca escalar horizontalmente.
   min_machines_running = 1
-  processes = ["app"]
+  processes = ['app']
 
   [[http_service.checks]]
-    interval = "30s"
-    timeout = "5s"
-    grace_period = "15s"
-    method = "GET"
-    path = "/health"
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '15s'
+    method = 'GET'
+    path = '/health'
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  size = 'shared-cpu-1x'
+  memory = '256mb'
